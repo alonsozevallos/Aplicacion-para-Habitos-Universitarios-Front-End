@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './styles'
+import StudentNavbar from './components/StudentNavbar'
+import WelcomeSection from './components/WelcomeSection'
+import HabitHeader from './components/HabitHeader'
+import NewHabitForm from './components/NewHabitForm'
+import HabitCard from './components/HabitCard'
 
 const DEFAULT_HABITS = [
   { id: 1, icon: '📚', nombre: 'Lectura diaria',   meta: '30 min / día', dias: [], motivo: '', actividades: [] },
@@ -32,18 +37,6 @@ const getUserPreviewPhoto = (email) => {
   if (stored) return stored
   const user = getRegisteredUser(email)
   return user?.photo || ''
-}
-
-function NavLogo() {
-  return (
-    <div style={styles.navLogoBox}>
-      <svg width="20" height="20" viewBox="0 0 34 34" fill="none">
-        <rect x="3"  y="18" width="6" height="13" rx="2" fill="#facc15" />
-        <rect x="14" y="10" width="6" height="21" rx="2" fill="#4ade80" />
-        <rect x="25" y="5"  width="6" height="26" rx="2" fill="#f87171" />
-      </svg>
-    </div>
-  )
 }
 
 const DAYS_OF_WEEK = [
@@ -422,377 +415,84 @@ const StudentDashboard = () => {
 
   return (
     <div style={styles.page}>
-      <nav style={styles.navbar}>
-        <div style={styles.navLeft}>
-          <NavLogo />
-          <span style={styles.navTitle}>Seguimiento de Hábitos</span>
-        </div>
-        <div style={styles.navRight}>
-          <span style={styles.navUser}>{adminPreviewMode ? `Preview: ${studentName}` : studentName}</span>
-          {(adminPreviewMode || adminImpersonating) && (
-            <button
-              type="button"
-              style={{ ...styles.btnSecondary, padding: '8px 16px' }}
-              onClick={handleExitAdmin}
-              onMouseEnter={e => (e.target.style.background = '#e2e8f0')}
-              onMouseLeave={e => (e.target.style.background = '#f8fafc')}
-            >
-              Volver a Admin
-            </button>
-          )}
-          <button
-            style={styles.btnLogout}
-            onClick={handleLogout}
-            onMouseEnter={e => (e.target.style.background = 'rgba(255,255,255,0.25)')}
-            onMouseLeave={e => (e.target.style.background = 'rgba(255,255,255,0.15)')}
-          >
-            Cerrar Sesión
-          </button>
-        </div>
-      </nav>
+      <StudentNavbar
+        adminPreviewMode={adminPreviewMode}
+        adminImpersonating={adminImpersonating}
+        studentName={studentName}
+        onExitAdmin={handleExitAdmin}
+        onLogout={handleLogout}
+      />
 
       <main style={styles.content}>
-        <div style={styles.welcomeBox}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={styles.welcomeAvatar}>
-                {studentPhotoState ? (
-                  <img src={studentPhotoState} alt="Foto de perfil" style={styles.welcomeAvatarImage} />
-                ) : (
-                  initials
-                )}
-              </div>
-              <div>
-                <p style={styles.welcomeTitle}>¡Bienvenido, {studentName.split(' ')[0]}! 👋</p>
-                <p style={styles.welcomeSub}>
-                  {isReadOnly
-                    ? 'Vista previa de estudiante. No se permiten cambios.'
-                    : 'Gestión personalizada de tus hábitos y actividades.'}
-                </p>
-              </div>
-            </div>
-            {!isReadOnly && (
-              <div style={styles.activityMenu}>
-                <button type="button" style={styles.activityMenuButton} onClick={toggleProfileMenu}>⋮</button>
-                {openProfileMenu && (
-                  <div style={styles.activityMenuDropdown}>
-                    <button
-                      type="button"
-                      style={styles.activityMenuItem}
-                      onClick={() => { photoInputRef.current?.click(); setOpenProfileMenu(false) }}
-                    >
-                      📷 Cambiar foto
-                    </button>
-                    <button type="button" style={styles.activityMenuItemDanger} onClick={handleRemoveProfilePhoto}>
-                      🗑 Eliminar foto
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          {!isReadOnly && (
-            <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleProfilePhotoChange} />
-          )}
-        </div>
+        <WelcomeSection
+          studentPhotoState={studentPhotoState}
+          initials={initials}
+          studentName={studentName}
+          isReadOnly={isReadOnly}
+          openProfileMenu={openProfileMenu}
+          toggleProfileMenu={toggleProfileMenu}
+          onChoosePhoto={() => {
+            photoInputRef.current?.click()
+            setOpenProfileMenu(false)
+          }}
+          onRemovePhoto={handleRemoveProfilePhoto}
+          onProfilePhotoChange={handleProfilePhotoChange}
+          photoInputRef={photoInputRef}
+        />
 
-        <div style={styles.habitHeader}>
-          <div>
-            <p style={styles.sectionTitle}>Mis Hábitos</p>
-            <p style={styles.sectionSub}>
-              {isReadOnly
-                ? 'Esta es una vista previa del dashboard del estudiante.'
-                : 'Agrega hábitos nuevos y define actividades por cada hábito.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            style={styles.btnCalendar}
-            onClick={() => navigate('/calendar')}
-            onMouseEnter={e => { e.currentTarget.style.background = '#1d4ed8'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(37,99,235,0.45)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.30)' }}
-          >
-            📅 Calendario
-          </button>
-        </div>
+        <HabitHeader
+          isReadOnly={isReadOnly}
+          onOpenCalendar={() => navigate('/calendar')}
+        />
 
         {!isReadOnly && (
-          <form style={styles.newHabitForm} onSubmit={handleAddHabit}>
-            <div style={styles.formGroup}>
-              <label style={styles.formLabel}>Nombre de hábito</label>
-              <input
-                style={styles.formInput}
-                value={newHabit.nombre}
-                onChange={e => setNewHabit(prev => ({ ...prev, nombre: e.target.value }))}
-                placeholder="Ej. Estudiar 30 minutos"
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.formLabel}>Meta</label>
-              <input
-                style={styles.formInput}
-                value={newHabit.meta}
-                onChange={e => setNewHabit(prev => ({ ...prev, meta: e.target.value }))}
-                placeholder="Ej. 5 días a la semana"
-              />
-            </div>
-            <div style={styles.formGroupSmall}>
-              <label style={styles.formLabel}>Icono</label>
-              <input
-                style={styles.formInput}
-                value={newHabit.icon}
-                onChange={e => setNewHabit(prev => ({ ...prev, icon: e.target.value }))}
-                placeholder="Ej. 📖"
-              />
-            </div>
-
-            <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', alignItems: 'start' }}>
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Días (en los que realizas el hábito)</label>
-                <div style={styles.daysSelector}>
-                  {DAYS_OF_WEEK.map(d => (
-                    <button
-                      key={d.key}
-                      type="button"
-                      style={{
-                        ...styles.dayChip,
-                        ...(newHabit.dias.includes(d.key) ? styles.dayChipActive : {}),
-                      }}
-                      onClick={() => toggleDay(d.key)}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Motivo (¿Qué quiero lograr?)</label>
-                <input
-                  style={styles.formInput}
-                  value={newHabit.motivo}
-                  onChange={e => setNewHabit(prev => ({ ...prev, motivo: e.target.value }))}
-                  placeholder="Ej. Mejorar mi concentración y memoria"
-                />
-              </div>
-            </div>
-
-            <button type="submit" style={{ ...styles.btnPrimary, gridColumn: '1 / -1', justifySelf: 'start' }}>
-              Agregar hábito
-            </button>
-          </form>
+          <NewHabitForm
+            newHabit={newHabit}
+            setNewHabit={setNewHabit}
+            onSubmit={handleAddHabit}
+            daysOfWeek={DAYS_OF_WEEK}
+            toggleDay={toggleDay}
+          />
         )}
 
         {error && <div style={styles.errorBox}>{error}</div>}
 
         <div style={styles.habitsGrid}>
           {habits.map(habit => (
-            <div key={habit.id} style={styles.habitCard}>
-              <div style={styles.habitCardHeader}>
-                <div style={styles.habitCardHeaderLeft}>
-                  <div style={styles.habitIcon}>{habit.icon}</div>
-                  <div>
-                    <p style={styles.habitName}>{habit.nombre}</p>
-                    <p style={styles.habitMeta}>{habit.meta}</p>
-                  </div>
-                </div>
-                {!isReadOnly && (
-                  <div style={styles.habitMenu}>
-                    <button type="button" style={styles.habitMenuButton} onClick={() => toggleHabitMenu(habit.id)}>⋮</button>
-                    {openHabitMenu === habit.id && (
-                      <div style={styles.habitMenuDropdown}>
-                        <button type="button" style={styles.habitMenuItem} onClick={() => handleStartEditHabit(habit)}>✏️ Editar</button>
-                        <button type="button" style={styles.habitMenuItem} onClick={() => handleResetHabitProgress(habit.id)}>🔄 Reiniciar</button>
-                        <button type="button" style={styles.habitMenuItemDanger} onClick={() => handleRemoveHabit(habit.id)}>🗑 Eliminar</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {(habit.dias?.length > 0 || habit.motivo) && (
-                <div style={styles.habitMetaExtra}>
-                  {habit.dias?.length > 0 && (
-                    <span style={styles.habitDiasTag}>📅 {formatDias(habit.dias)}</span>
-                  )}
-                  {habit.motivo && (
-                    <span style={styles.habitMotivoTag}>🎯 {habit.motivo}</span>
-                  )}
-                </div>
-              )}
-
-              {editingHabitId === habit.id && (
-                <div style={styles.editHabitPanel}>
-                  <div style={styles.editHabitRow}>
-                    <input
-                      style={styles.formInput}
-                      value={editingHabitValues.icon}
-                      onChange={e => setEditingHabitValues(prev => ({ ...prev, icon: e.target.value }))}
-                      placeholder="Icono"
-                    />
-                    <input
-                      style={styles.formInput}
-                      value={editingHabitValues.nombre}
-                      onChange={e => setEditingHabitValues(prev => ({ ...prev, nombre: e.target.value }))}
-                      placeholder="Nombre del hábito"
-                    />
-                  </div>
-                  <div style={styles.editHabitRow}>
-                    <input
-                      style={styles.formInput}
-                      value={editingHabitValues.meta}
-                      onChange={e => setEditingHabitValues(prev => ({ ...prev, meta: e.target.value }))}
-                      placeholder="Meta"
-                    />
-                    <input
-                      style={styles.formInput}
-                      value={editingHabitValues.motivo}
-                      onChange={e => setEditingHabitValues(prev => ({ ...prev, motivo: e.target.value }))}
-                      placeholder="Motivo"
-                    />
-                  </div>
-                  <div style={{ marginBottom: '12px' }}>
-                    <p style={{ ...styles.formLabel, marginBottom: '8px' }}>Días</p>
-                    <div style={styles.daysSelector}>
-                      {DAYS_OF_WEEK.map(d => (
-                        <button
-                          key={d.key}
-                          type="button"
-                          style={{
-                            ...styles.dayChip,
-                            ...(editingHabitValues.dias.includes(d.key) ? styles.dayChipActive : {}),
-                          }}
-                          onClick={() => toggleDay(d.key, true)}
-                        >
-                          {d.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={styles.editHabitActions}>
-                    <button type="button" style={styles.btnSecondary} onClick={handleCancelEditHabit}>Cancelar</button>
-                    <button type="button" style={styles.btnPrimary} onClick={() => handleSaveHabitEdit(habit.id)}>Guardar</button>
-                  </div>
-                </div>
-              )}
-
-              <div style={styles.progressBar}>
-                <div style={{ ...styles.progressFill, width: `${computeProgress(habit)}%`, background: '#2563eb' }} />
-              </div>
-              <p style={styles.progressText}>{computeProgress(habit)}% completado</p>
-
-              <div style={styles.activitySection}>
-                <p style={styles.activityTitle}>Actividades</p>
-                {habit.actividades.length === 0 ? (
-                  <p style={styles.emptyText}>No hay actividades aún.</p>
-                ) : (
-                  <ul style={styles.activityList}>
-                    {habit.actividades.map(activity => {
-                      const activityKey = `${habit.id}_${activity.id}`
-                      const isEditing = editingActivity.habitId === habit.id && editingActivity.activityId === activity.id
-                      return (
-                        <li key={activity.id} style={styles.activityItem}>
-                          <div style={styles.activityItemLeft}>
-                            <button
-                              type="button"
-                              style={{
-                                ...styles.activityButton,
-                                cursor: isReadOnly ? 'not-allowed' : 'pointer',
-                                opacity: isReadOnly ? 0.5 : 1,
-                              }}
-                              onClick={() => !isReadOnly && toggleActivityCompletion(habit.id, activity.id)}
-                            >
-                              {activity.completada ? '✓' : '+'}
-                            </button>
-                            <div>
-                              {isEditing ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                  <input
-                                    style={styles.activityEditInput}
-                                    value={editingActivity.texto}
-                                    onChange={e => setEditingActivity(prev => ({ ...prev, texto: e.target.value }))}
-                                  />
-                                  <input
-                                    type="date"
-                                    style={{ ...styles.activityEditInput, fontSize: '12px' }}
-                                    value={editingActivity.fechaVence}
-                                    onChange={e => setEditingActivity(prev => ({ ...prev, fechaVence: e.target.value }))}
-                                  />
-                                </div>
-                              ) : (
-                                <div>
-                                  <span style={activity.completada ? styles.activityDone : styles.activityText}>
-                                    {activity.texto}
-                                  </span>
-                                  <div style={styles.activityMeta}>
-                                    {activity.fechaVence && (
-                                      <span style={styles.activityDateTag}>
-                                        📅 Vence: {formatDueDate(activity.fechaVence)}
-                                      </span>
-                                    )}
-                                    {habit.dias?.length > 0 && (
-                                      <span style={styles.activityDaysTag}>
-                                        {formatDias(habit.dias)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div style={styles.activityItemRight}>
-                            {isEditing ? (
-                              <div style={styles.activityEditActions}>
-                                <button type="button" style={styles.btnSecondary} onClick={handleCancelEditActivity}>Cancelar</button>
-                                <button type="button" style={styles.btnPrimary} onClick={handleSaveActivityEdit}>Guardar</button>
-                              </div>
-                            ) : (
-                              !isReadOnly && (
-                                <div style={styles.activityMenu}>
-                                  <button
-                                    type="button"
-                                    style={styles.activityMenuButton}
-                                    onClick={() => toggleActivityMenu(habit.id, activity.id)}
-                                  >
-                                    ⋮
-                                  </button>
-                                  {openActivityMenu === activityKey && (
-                                    <div style={styles.activityMenuDropdown}>
-                                      <button type="button" style={styles.activityMenuItem} onClick={() => handleStartEditActivity(habit.id, activity)}>✏️ Renombrar</button>
-                                      <button type="button" style={styles.activityMenuItemDanger} onClick={() => handleRemoveActivity(habit.id, activity.id)}>✕ Eliminar</button>
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-                {!isReadOnly && (
-                  <div style={styles.activityFormExtended}>
-                    <input
-                      style={{ ...styles.formInput, fontSize: '13px', minWidth: '140px' }}
-                      value={activityText[habit.id] || ''}
-                      onChange={e => handleActivityChange(habit.id, e.target.value)}
-                      placeholder="Nueva actividad"
-                    />
-                    <input
-                      type="date"
-                      style={{ ...styles.formInput, fontSize: '13px', minWidth: '140px' }}
-                      value={activityDueDate[habit.id] || ''}
-                      onChange={e => setActivityDueDate(prev => ({ ...prev, [habit.id]: e.target.value }))}
-                      title="Fecha de vencimiento"
-                    />
-                    <button 
-                    type="button" style={styles.btnSecondary} onClick={() => handleAddActivity(habit.id)}>
-                      Añadir
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <HabitCard
+              key={habit.id}
+              habit={habit}
+              isReadOnly={isReadOnly}
+              openHabitMenu={openHabitMenu}
+              toggleHabitMenu={toggleHabitMenu}
+              handleStartEditHabit={handleStartEditHabit}
+              handleResetHabitProgress={handleResetHabitProgress}
+              handleRemoveHabit={handleRemoveHabit}
+              formatDias={formatDias}
+              editingHabitId={editingHabitId}
+              editingHabitValues={editingHabitValues}
+              setEditingHabitValues={setEditingHabitValues}
+              daysOfWeek={DAYS_OF_WEEK}
+              toggleDay={toggleDay}
+              handleCancelEditHabit={handleCancelEditHabit}
+              handleSaveHabitEdit={handleSaveHabitEdit}
+              computeProgress={computeProgress}
+              editingActivity={editingActivity}
+              setEditingActivity={setEditingActivity}
+              toggleActivityCompletion={toggleActivityCompletion}
+              openActivityMenu={openActivityMenu}
+              toggleActivityMenu={toggleActivityMenu}
+              handleStartEditActivity={handleStartEditActivity}
+              handleRemoveActivity={handleRemoveActivity}
+              handleCancelEditActivity={handleCancelEditActivity}
+              handleSaveActivityEdit={handleSaveActivityEdit}
+              activityText={activityText}
+              handleActivityChange={handleActivityChange}
+              activityDueDate={activityDueDate}
+              setActivityDueDate={setActivityDueDate}
+              handleAddActivity={handleAddActivity}
+              formatDueDate={formatDueDate}
+            />
           ))}
         </div>
       </main>
