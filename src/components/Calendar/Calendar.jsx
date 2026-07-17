@@ -292,7 +292,9 @@ const Calendar = () => {
                               }}>
                                 {item.texto}
                               </p>
-                              <span style={calStyles.tagVence}>⏰ Vence hoy</span>
+                              <span style={calStyles.tagVence}>
+                                ⏰ {selectedDate === toISO(today) ? 'Vence hoy' : 'Vence este día'}
+                              </span>
                             </>
                           )}
                           {item.type === 'recurrente' && (
