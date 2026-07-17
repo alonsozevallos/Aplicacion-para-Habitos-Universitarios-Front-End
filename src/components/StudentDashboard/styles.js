@@ -547,10 +547,10 @@ const styles = {
   },
 
   activityFormExtended: {
-    display: 'grid',
-    gridTemplateColumns: '1fr auto auto',
-    gap: '8px',
-    alignItems: 'center',
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '8px',
+  alignItems: 'center',
   },
 }
 
