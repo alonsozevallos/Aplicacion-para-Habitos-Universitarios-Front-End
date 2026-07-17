@@ -228,13 +228,13 @@ const HabitCard = ({
         {!isReadOnly && (
           <div style={styles.activityFormExtended}>
             <input
-              style={styles.formInput}
+              style={{ ...styles.formInput, flex: '1 1 160px', width: 'auto' }}
               placeholder="Nueva actividad..."
               value={activityText[habit.id] || ''}
               onChange={e => handleActivityChange(habit.id, e.target.value)}
             />
             <input
-              style={styles.formInput}
+              style={{ ...styles.formInput, flex: '0 1 150px', width: 'auto' }}
               type="date"
               value={activityDueDate[habit.id] || ''}
               onChange={e => setActivityDueDate(prev => ({ ...prev, [habit.id]: e.target.value }))}
